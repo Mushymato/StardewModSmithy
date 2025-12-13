@@ -1,0 +1,3 @@
+# StardewModSmithy
+
+New mod.

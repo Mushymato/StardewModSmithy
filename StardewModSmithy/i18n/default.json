@@ -1,0 +1,7 @@
+{
+  "$schema": "https://smapi.io/schemas/i18n.json",
+  "gui.button.tilesheet.select": "Select Tilesheet Area",
+  "gui.button.bounding.select": "Select Bounding Box Area",
+  "gui.button.create": "Create",
+  "gui.button.export": "Export"
+}
