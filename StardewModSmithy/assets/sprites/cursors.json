@@ -3,21 +3,21 @@
   "Sprites": {
     "tileGreen": {
       "SourceRect": "194, 388, 16, 16",
-      "Scale": 4,
+      "Scale": 4
     },
     "tileRed": {
       "SourceRect": "210, 388, 16, 16",
-      "Scale": 4,
+      "Scale": 4
     },
     "borderRed": {
       "SourceRect": "375,357,3,3",
       "FixedEdges": "1,1,1,1",
-      "Scale": 4,
+      "Scale": 4
     },
     "borderWhite": {
       "SourceRect": "379,357,3,3",
       "FixedEdges": "1,1,1,1",
-      "Scale": 4,
+      "Scale": 8
     }
   }
 }

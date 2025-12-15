@@ -25,6 +25,9 @@ public sealed class ModEntry : Mod
 
     public static string ContentPatcherVersion { get; internal set; } = "2.8.0";
 
+    internal const string EDITING_INPUT = "editing_input";
+    internal const string EDITING_OUTPUT = "editing_output";
+
     public override void Entry(IModHelper helper)
     {
         I18n.Init(helper.Translation);
@@ -32,6 +35,9 @@ public sealed class ModEntry : Mod
         ParseAssetName = helper.GameContent.ParseAssetName;
         DirectoryPath = helper.DirectoryPath;
         ModContent = helper.ModContent;
+
+        Directory.CreateDirectory(Path.Combine(DirectoryPath, EDITING_INPUT));
+        Directory.CreateDirectory(Path.Combine(DirectoryPath, EDITING_OUTPUT));
 
         helper.ConsoleCommands.Add("sms-testy", "testy test", ConsoleTesty);
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
@@ -50,7 +56,7 @@ public sealed class ModEntry : Mod
     {
         // MockManifest manifest = new(Name: "Mock", Author: "debug");
 
-        // string outputPath = Path.Combine(Helper.DirectoryPath, "output", Sanitize.Path(manifest.UniqueID));
+        // string outputPath = Path.Combine(Helper.DirectoryPath, "editing_output", Sanitize.Path(manifest.UniqueID));
         // Directory.CreateDirectory(outputPath);
 
         FurnitureAsset furnitureAsset = new();
@@ -63,7 +69,7 @@ public sealed class ModEntry : Mod
             "testyFurni2/rug/3 3/3 1/1/520/2/[LocalizedText {{ModId}}.i18n:decor.petals_pink]/0/decor\\petals_white\\{{ModId}}/false"
         )!;
 
-        TextureAsset textureAsset = TextureAsset.FromSourceDir("input", "furniture");
+        TextureAsset textureAsset = TextureAsset.FromSourceDir("editing_input", "furniture");
 
         EditorMenuManager.ShowFurnitureEditor(textureAsset, furnitureAsset);
 

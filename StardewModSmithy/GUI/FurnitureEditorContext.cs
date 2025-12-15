@@ -4,54 +4,93 @@ using PropertyChanged.SourceGenerator;
 using StardewModdingAPI;
 using StardewModSmithy.Integration;
 using StardewModSmithy.Models;
-using StardewValley;
 
 namespace StardewModSmithy.GUI;
 
+public enum DragMovementMode
+{
+    Sheet = 0,
+    Bounds = 1,
+}
+
 internal sealed partial class FurnitureEditorContext(TextureAsset textureAsset, FurnitureAsset furnitureAsset)
 {
+    public const int ONE_TILE = 64;
+
     [Notify]
     private SDUISprite furnitureSheet = GetFurnitureSheet(textureAsset);
+
+    public EnumSegmentsViewModel<DragMovementMode> MovementMode = new() { SelectedValue = DragMovementMode.Sheet };
 
     [Notify]
     public SDUIEdges furnitureSheetMargin = new(0, 0, 0, 0);
 
+    [Notify]
+    public float furnitureSheetOpacity = 1f;
+
+    [Notify]
+    public SDUIEdges selectionBoundsPadding = new(0, 0, 0, 0);
+
+    public void UpdateSpriteIndex(SDUIEdges furniSheet, SDUIEdges selectBounds)
+    {
+        if (SelectedFurniture == null)
+        {
+            if (MovementMode.SelectedValue == DragMovementMode.Bounds)
+                SelectionBoundsPadding = selectBounds;
+            else
+                FurnitureSheetMargin = furniSheet;
+            return;
+        }
+        int xDelta = Math.Max(
+            0,
+            Math.Min(
+                (selectBounds.Left - furniSheet.Left) / ONE_TILE,
+                FurnitureSheet.IndexColCnt - SelectedFurniture.TilesheetSize.X
+            )
+        );
+        int yDelta = Math.Max(
+            0,
+            Math.Min(
+                (selectBounds.Top - furniSheet.Top) / ONE_TILE,
+                FurnitureSheet.IndexRowCnt - SelectedFurniture.TilesheetSize.Y
+            )
+        );
+        SelectedFurniture.SpriteIndex = yDelta * FurnitureSheet.IndexColCnt + xDelta;
+
+        if (MovementMode.SelectedValue == DragMovementMode.Bounds)
+        {
+            SelectionBoundsPadding = new(furniSheet.Left + xDelta * ONE_TILE, furniSheet.Top + yDelta * ONE_TILE, 0, 0);
+        }
+        else
+        {
+            FurnitureSheetMargin = new(
+                selectBounds.Left - xDelta * ONE_TILE,
+                selectBounds.Top - yDelta * ONE_TILE,
+                0,
+                0
+            );
+        }
+    }
+
+    [DependsOn(nameof(FurnitureSheetMargin), nameof(SelectionBoundsPadding))]
     public IReadOnlyList<FurnitureDelimString> FurnitureDataList => furnitureAsset.Editing.Values.ToList();
 
     public Func<FurnitureDelimString, string> FurnitureDataName = (delimStr) => delimStr.Name;
 
-    [Notify]
-    private FurnitureDelimString? selectedFurniture = null;
-
-    public bool HasSelectedFurniture => selectedFurniture != null;
-
-    public string FurnitureTilesheetArea
+    private FurnitureDelimString? selectedFurniture;
+    public FurnitureDelimString? SelectedFurniture
     {
-        get
+        get => selectedFurniture;
+        set
         {
-            if (SelectedFurniture == null)
-                return "0px 0px";
-            return $"{SelectedFurniture.TilesheetSize.X * 64}px {SelectedFurniture.TilesheetSize.Y * 64}px";
+            selectedFurniture = value;
+            OnPropertyChanged(new(nameof(SelectedFurniture)));
+            OnPropertyChanged(new(nameof(HasSelectedFurniture)));
+            UpdateSpriteIndex(furnitureSheetMargin, selectionBoundsPadding);
         }
     }
 
-    public IEnumerable<SDUIEdges> FurnitureBoundingSquares
-    {
-        get
-        {
-            if (SelectedFurniture == null)
-                yield break;
-            Point boundingBox = SelectedFurniture.BoundingBoxSize;
-            Point tilesheetSize = SelectedFurniture.TilesheetSize;
-            for (int x = 0; x < boundingBox.X; x++)
-            {
-                for (int y = 0; y < boundingBox.Y; y++)
-                {
-                    yield return new(x * 64, (tilesheetSize.Y - 1 - y) * 64);
-                }
-            }
-        }
-    }
+    public bool HasSelectedFurniture => SelectedFurniture != null;
 
     private static SDUISprite GetFurnitureSheet(TextureAsset textureAsset)
     {
@@ -68,36 +107,71 @@ internal sealed partial class FurnitureEditorContext(TextureAsset textureAsset, 
     public void SheetDragStart(Vector2 position)
     {
         lastDragPos = position;
+        FurnitureSheetOpacity = 0.7f;
     }
-
-    private const int DRAG_STEP = 64;
 
     public void SheetDrag(Vector2 position)
     {
-        Vector2 dragChange = position - lastDragPos;
-        int newOffsetX = furnitureSheetMargin.Left;
-        int newOffsetY = furnitureSheetMargin.Top;
-        bool appliedChange = false;
-        if (Math.Abs(dragChange.X) >= DRAG_STEP)
+        int newOffsetX;
+        int newOffsetY;
+        if (MovementMode.SelectedValue == DragMovementMode.Bounds)
         {
-            appliedChange = true;
-            newOffsetX += Math.Sign(dragChange.X) * DRAG_STEP;
+            newOffsetX = selectionBoundsPadding.Left;
+            newOffsetY = selectionBoundsPadding.Top;
         }
-        if (Math.Abs(dragChange.Y) >= DRAG_STEP)
+        else
         {
-            appliedChange = true;
-            newOffsetY += Math.Sign(dragChange.Y) * DRAG_STEP;
+            newOffsetX = furnitureSheetMargin.Left;
+            newOffsetY = furnitureSheetMargin.Top;
         }
 
-        if (appliedChange)
+        Vector2 dragChange = position - lastDragPos;
+        int dragTileCnt;
+        bool changed = false;
+        if ((dragTileCnt = (int)(MathF.Abs(dragChange.X) / ONE_TILE) * ONE_TILE) > 0)
         {
-            lastDragPos = position;
+            dragTileCnt *= Math.Sign(dragChange.X);
+            newOffsetX += dragTileCnt;
+            lastDragPos.X += dragTileCnt;
+            changed = true;
         }
-        FurnitureSheetMargin = new(newOffsetX, newOffsetY, 0, 0);
+        if ((dragTileCnt = (int)(MathF.Abs(dragChange.Y) / ONE_TILE) * ONE_TILE) > 0)
+        {
+            dragTileCnt *= Math.Sign(dragChange.Y);
+            newOffsetY += dragTileCnt;
+            lastDragPos.Y += dragTileCnt;
+            changed = true;
+        }
+
+        if (changed)
+        {
+            if (MovementMode.SelectedValue == DragMovementMode.Bounds)
+            {
+                UpdateSpriteIndex(furnitureSheetMargin, new(newOffsetX, newOffsetY, 0, 0));
+            }
+            else
+            {
+                UpdateSpriteIndex(new(newOffsetX, newOffsetY, 0, 0), selectionBoundsPadding);
+            }
+        }
     }
 
     public void SheetDragEnd(Vector2 position)
     {
         lastDragPos = new(-1, -1);
+        FurnitureSheetOpacity = 1f;
+        if (SelectedFurniture?.SpriteIndex < 0)
+        {
+            SelectedFurniture.SpriteIndex = 0;
+            SelectionBoundsPadding = new(FurnitureSheetMargin.Left, FurnitureSheetMargin.Top, 0, 0);
+        }
     }
+
+    public void SheetWheel()
+    {
+        MovementMode.SelectedValue =
+            MovementMode.SelectedValue == DragMovementMode.Sheet ? DragMovementMode.Bounds : DragMovementMode.Sheet;
+    }
+
+    public void SheetWheelNull() { }
 }

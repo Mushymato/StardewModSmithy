@@ -43,7 +43,7 @@ public sealed record MockManifest(string Name, string Author)
     public List<string> UpdateKeys = [];
 }
 
-public sealed class OutputContentPack(MockManifest manifest)
+public sealed class OutputContentPack(MockManifest manifest) : IOutputPack
 {
     public List<ILoadableAsset> LoadableAssets = [];
     public List<IEditableAsset> EditableAssets = [];
@@ -83,5 +83,11 @@ public sealed class OutputContentPack(MockManifest manifest)
             Path.Combine(targetPath, fileName),
             JsonConvert.SerializeObject(content, Formatting.Indented)
         );
+    }
+
+    public void Load(string targetPath)
+    {
+        string dataDir = Path.Combine(targetPath, "data");
+        string assetsDir = Path.Combine(targetPath, "assets");
     }
 }

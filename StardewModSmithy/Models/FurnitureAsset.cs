@@ -2,6 +2,8 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using PropertyChanged.SourceGenerator;
 using StardewModdingAPI;
+using StardewModSmithy.GUI;
+using StardewModSmithy.Integration;
 using StardewModSmithy.Models.Interfaces;
 using StardewModSmithy.Models.ValueKinds;
 
@@ -63,35 +65,80 @@ public sealed partial class FurnitureDelimString(string Id)
     [Notify]
     public Point tilesheetSize = Point.Zero;
     public string TilesheetSizeName => $"{TilesheetSize.X} {TilesheetSize.Y}";
+    public int TilesheetSizeX
+    {
+        get => TilesheetSize.X;
+        set => TilesheetSize = new(value, TilesheetSize.Y);
+    }
+    public int TilesheetSizeY
+    {
+        get => TilesheetSize.Y;
+        set => TilesheetSize = new(TilesheetSize.X, value);
+    }
 
     [Notify]
     public Point boundingBoxSize = Point.Zero;
     public string BoundingBoxSizeName => $"{BoundingBoxSize.X} {BoundingBoxSize.Y}";
+    public int BoundingBoxSizeX
+    {
+        get => BoundingBoxSize.X;
+        set => BoundingBoxSize = new(value, BoundingBoxSize.Y);
+    }
+    public int BoundingBoxSizeY
+    {
+        get => BoundingBoxSize.Y;
+        set => BoundingBoxSize = new(BoundingBoxSize.X, value);
+    }
 
-    public OptionedValue<int> RotationImpl { get; } = new(rotation_Options, 1);
+    public string GUI_TilesheetArea =>
+        $"{TilesheetSize.X * FurnitureEditorContext.ONE_TILE}px {TilesheetSize.Y * FurnitureEditorContext.ONE_TILE}px";
+
+    public IEnumerable<SDUIEdges> GUI_BoundingSquares
+    {
+        get
+        {
+            Point boundingBox = BoundingBoxSize;
+            Point tilesheetSize = TilesheetSize;
+            for (int x = 0; x < boundingBox.X; x++)
+            {
+                for (int y = 0; y < boundingBox.Y; y++)
+                {
+                    yield return new(
+                        x * FurnitureEditorContext.ONE_TILE,
+                        (tilesheetSize.Y - 1 - y) * FurnitureEditorContext.ONE_TILE
+                    );
+                }
+            }
+        }
+    }
+
+    private readonly OptionedValue<int> RotationImpl = new(rotation_Options, 1);
     public int Rotation
     {
-        get => RotationImpl.Value;
+        get => (int)RotationImpl.Value;
         set
         {
             RotationImpl.Value = value;
             OnPropertyChanged(new(nameof(Rotation)));
         }
     }
+    public Func<int, string> RotationName = (rot) => I18n.GetByKey($"gui.rotation.{rot}.name");
 
     [Notify]
-    public uint price = 0;
+    public int price = 0;
 
-    public OptionedValue<int> PlacementImpl { get; } = new(placement_Options, 1);
+    private readonly OptionedValue<int> PlacementImpl = new(placement_Options, 1);
     public int Placement
     {
-        get => PlacementImpl.Value;
+        get => (int)PlacementImpl.Value;
         set
         {
             PlacementImpl.Value = value;
             OnPropertyChanged(new(nameof(Placement)));
         }
     }
+    public Func<int, string> PlacementName = (place) =>
+        place == -1 ? I18n.Gui_Placement_Neg1_Name() : I18n.GetByKey($"gui.placement.{place}.name");
 
     public LocalizedString DisplayNameImpl { get; set; } = new(string.Concat(Id, "name"));
     public string DisplayName
@@ -105,7 +152,7 @@ public sealed partial class FurnitureDelimString(string Id)
     }
 
     [Notify]
-    public uint spriteIndex = 0;
+    public int spriteIndex = 0;
 
     public IAssetName TextureAssetName { get; set; } = ModEntry.ParseAssetName("TileSheets/furniture");
 
@@ -150,7 +197,7 @@ public sealed partial class FurnitureDelimString(string Id)
         {
             furniDelimString.Rotation = rotation;
         }
-        if (uint.TryParse(parts[5], out uint price))
+        if (int.TryParse(parts[5], out int price))
         {
             furniDelimString.Price = price;
         }
@@ -166,7 +213,7 @@ public sealed partial class FurnitureDelimString(string Id)
         {
             furniDelimString.DisplayName = parts[7];
         }
-        if (uint.TryParse(parts[8], out uint spriteIndex))
+        if (int.TryParse(parts[8], out int spriteIndex))
         {
             furniDelimString.SpriteIndex = spriteIndex;
         }

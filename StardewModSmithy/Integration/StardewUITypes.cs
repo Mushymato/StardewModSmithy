@@ -50,6 +50,9 @@ public record SDUISprite(
         : this(Texture, SourceRect, SDUIEdges.NONE, new()) { }
 
     public IAssetName? AssetName { get; internal set; }
+
+    public readonly int IndexColCnt = SourceRect.Width / 16;
+    public readonly int IndexRowCnt = SourceRect.Height / 16;
 };
 
 /// <summary>
