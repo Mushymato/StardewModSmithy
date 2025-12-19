@@ -2,15 +2,15 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using PropertyChanged.SourceGenerator;
 using StardewModdingAPI;
-using StardewModSmithy.GUI;
 using StardewModSmithy.GUI.ViewModels;
 using StardewModSmithy.Integration;
 using StardewModSmithy.Models.Interfaces;
 using StardewModSmithy.Models.ValueKinds;
+using StardewModSmithy.Wheels;
 
 namespace StardewModSmithy.Models;
 
-public sealed partial class FurnitureDelimString(string Id)
+public sealed partial class FurnitureDelimString(string Id) : IBoundsProvider
 {
     public const char DELIM = '/';
     #region options
@@ -79,8 +79,7 @@ public sealed partial class FurnitureDelimString(string Id)
     public SpinBoxViewModel BoundingBoxSizeY =>
         new(() => BoundingBoxSize.Y, (value) => BoundingBoxSize = new(BoundingBoxSize.X, value), 1, int.MaxValue);
 
-    public string GUI_TilesheetArea =>
-        $"{TilesheetSize.X * FurnitureEditorContext.ONE_TILE}px {TilesheetSize.Y * FurnitureEditorContext.ONE_TILE}px";
+    public string GUI_TilesheetArea => $"{TilesheetSize.X * Consts.ONE_TILE}px {TilesheetSize.Y * Consts.ONE_TILE}px";
 
     public IEnumerable<SDUIEdges> GUI_BoundingSquares
     {
@@ -92,10 +91,7 @@ public sealed partial class FurnitureDelimString(string Id)
             {
                 for (int y = 0; y < boundingBox.Y; y++)
                 {
-                    yield return new(
-                        x * FurnitureEditorContext.ONE_TILE,
-                        (tilesheetSize.Y - 1 - y) * FurnitureEditorContext.ONE_TILE
-                    );
+                    yield return new(x * Consts.ONE_TILE, (tilesheetSize.Y - 1 - y) * Consts.ONE_TILE);
                 }
             }
         }
@@ -140,8 +136,7 @@ public sealed partial class FurnitureDelimString(string Id)
         }
     }
 
-    [Notify]
-    public int spriteIndex = 0;
+    public int SpriteIndex { get; set; } = 0;
 
     public IAssetName TextureAssetName { get; set; } = ModEntry.ParseAssetName("TileSheets/furniture");
 
