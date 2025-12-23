@@ -35,6 +35,8 @@ public sealed record MockInclude(string FromFile) : IMockPatch
 
 internal record MockContent(List<IMockPatch> Changes);
 
+internal record MockContentFurniture(List<MockEditData> Changes);
+
 internal sealed record MockContentMain(List<IMockPatch> Changes) : MockContent(Changes)
 {
 #pragma warning disable CA1822 // Mark members as static
@@ -46,9 +48,27 @@ public sealed class OutputPackContentPatcher(OutputManifest manifest) : IOutputP
 {
     public const string PackFor = "Pathoschild.ContentPatcher";
 
-    public readonly List<ILoadableAsset> LoadableAssets = [];
-    public readonly List<IEditableAsset> EditableAssets = [];
-    public TranslationStore? Translations = null;
+    public TextureAssetGroup? TextureAsset { get; set; } = null;
+    public FurnitureAsset? FurnitureAsset { get; set; } = null;
+
+    public IEnumerable<ILoadableAsset> LoadableAssets
+    {
+        get
+        {
+            if (TextureAsset is not null)
+                yield return TextureAsset;
+        }
+    }
+    public IEnumerable<IEditableAsset> EditableAssets
+    {
+        get
+        {
+            if (FurnitureAsset is not null)
+                yield return FurnitureAsset;
+        }
+    }
+
+    public TranslationStore? Translations = TranslationStore.FromSourceDir(manifest.TranslationFolder);
 
     public void Save()
     {
@@ -135,6 +155,31 @@ public sealed class OutputPackContentPatcher(OutputManifest manifest) : IOutputP
         string targetPath = manifest.OutputFolder;
 
         string dataDir = Path.Combine(targetPath, "data");
-        string assetsDir = Path.Combine(targetPath, "assets");
+        if (!Directory.Exists(dataDir))
+            return;
+
+        foreach (string file in Directory.GetFiles(dataDir))
+        {
+            if (!file.EndsWith(".json"))
+            {
+                continue;
+            }
+            string fileName = Path.GetFileName(file);
+            if (Path.GetFileName(file) != FurnitureAsset.DefaultIncludeName)
+            {
+                continue;
+            }
+            if (
+                ModEntry.ReadJson<MockContentFurniture>(dataDir, fileName) is not MockContentFurniture furnitureContent
+                || furnitureContent.Changes.FirstOrDefault(patch => patch is not null) is not MockEditData editData
+            )
+            {
+                continue;
+            }
+            FurnitureAsset = new();
+            FurnitureAsset.SetData(editData.Entries);
+            FurnitureAsset.SetTranslations(Translations);
+            break;
+        }
     }
 }

@@ -171,12 +171,12 @@ public sealed partial class FurnitureDelimString(string Id) : IBoundsProvider
 
         FurnitureDelimString furniDelimString = new(id)
         {
-            Name = parts[0],
+            Name = Sanitize.ModIdPrefix(parts[0]),
+            Type = parts[1],
             TilesheetSize = PointFromString(parts[2]),
             BoundingBoxSize = PointFromString(parts[3]),
         };
 
-        furniDelimString.Type = parts[1];
         if (int.TryParse(parts[4], out int rotation))
         {
             furniDelimString.Rotation = rotation;
@@ -219,7 +219,7 @@ public sealed partial class FurnitureDelimString(string Id) : IBoundsProvider
         if (TextureAssetName == null)
             return string.Empty;
 
-        sb.Append($"{{{{ModId}}}}_{Name}");
+        sb.Append(string.Concat(Sanitize.ModIdPrefixValue, Name));
         sb.Append(DELIM);
 
         sb.Append(Type);
@@ -265,9 +265,10 @@ public sealed partial class FurnitureDelimString(string Id) : IBoundsProvider
 
 public sealed class FurnitureAsset : IEditableAsset
 {
+    public const string DefaultIncludeName = "furniture.json";
     public string Desc => "furniture";
     public string Target => "Data/Furniture";
-    public string IncludeName => "furniture.json";
+    public string IncludeName => DefaultIncludeName;
     public Dictionary<string, FurnitureDelimString> Editing = [];
 
     public Dictionary<string, object> GetData()
@@ -276,9 +277,21 @@ public sealed class FurnitureAsset : IEditableAsset
         foreach ((string key, FurnitureDelimString furniDelim) in Editing)
         {
             if (furniDelim.TextureAssetName != null)
-                output[$"{{{{ModId}}}}_{key}"] = furniDelim.Serialize();
+                output[string.Concat(Sanitize.ModIdPrefixValue, key)] = furniDelim.Serialize();
         }
         return output;
+    }
+
+    public void SetData(Dictionary<string, object> data)
+    {
+        foreach ((string key, object value) in data)
+        {
+            if (value is not string strV)
+                return;
+            string baseKey = Sanitize.ModIdPrefix(key);
+            if (FurnitureDelimString.Deserialize(baseKey, strV) is FurnitureDelimString furniDelim)
+                Editing[baseKey] = furniDelim;
+        }
     }
 
     public IEnumerable<IAssetName> GetRequiredAssets()

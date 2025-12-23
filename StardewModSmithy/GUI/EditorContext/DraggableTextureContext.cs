@@ -141,6 +141,34 @@ public partial class DraggableTextureContext(TextureAssetGroup textureAssetGroup
         }
     }
 
+    public void SetSpriteIndexForBoundsProvider(IBoundsProvider? boundsProvider)
+    {
+        if (boundsProvider == null)
+            return;
+        SpriteIndex = boundsProvider.SpriteIndex;
+        int xPos = SpriteIndex % Sheet.IndexColCnt;
+        int yPos = SpriteIndex / Sheet.IndexColCnt;
+
+        if (MovementMode.SelectedValue == DragMovementMode.Bounds)
+        {
+            BoundsPadding = new(
+                SheetMargin.Left + xPos * Consts.ONE_TILE,
+                SheetMargin.Top + yPos * Consts.ONE_TILE,
+                0,
+                0
+            );
+        }
+        else
+        {
+            SheetMargin = new(
+                BoundsPadding.Left - xPos * Consts.ONE_TILE,
+                BoundsPadding.Top - yPos * Consts.ONE_TILE,
+                0,
+                0
+            );
+        }
+    }
+
     private Vector2 lastDragPos = new(-1, -1);
 
     public void SheetDragStart(Vector2 position)
@@ -216,7 +244,7 @@ public partial class DraggableTextureContext(TextureAssetGroup textureAssetGroup
     public void OnEditorBoundsProviderChanged(object? sender, IBoundsProvider? e)
     {
         BoundsProvider = e;
-        UpdateSpriteIndex(SheetMargin, BoundsPadding);
+        SetSpriteIndexForBoundsProvider(e);
         if (e == null)
             return;
         if (

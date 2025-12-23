@@ -1,13 +1,15 @@
+using PropertyChanged.SourceGenerator;
 using StardewModSmithy.Models;
 
 namespace StardewModSmithy.GUI.EditorContext;
 
-public class FurnitureAssetContext(FurnitureAsset furnitureAsset) : AbstractEditableAssetContext()
+public partial class FurnitureAssetContext(FurnitureAsset furnitureAsset) : AbstractEditableAssetContext()
 {
     public IReadOnlyList<FurnitureDelimString> FurnitureDataList => furnitureAsset.Editing.Values.ToList();
 
     public Func<FurnitureDelimString, string> FurnitureDataName = (delimStr) => delimStr.Name;
 
+    [DependsOn(nameof(BoundsProvider))]
     public FurnitureDelimString? SelectedFurniture => (FurnitureDelimString?)BoundsProvider;
 
     public override void SetSpriteIndex(object? sender, int spriteIndex)
