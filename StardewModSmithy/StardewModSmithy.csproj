@@ -18,7 +18,7 @@
     <Description>A mod for creating mods.</Description>
     <UniqueId>mushymato.StardewModSmithy</UniqueId>
     <UpdateKeys>Nexus:41037,GitHub:Mushymato/StardewModSmithy</UpdateKeys>
-    <Version>1.1.0</Version>
+    <Version>1.1.0-wip.0</Version>
     <MinimumApiVersion_Behavior>Update</MinimumApiVersion_Behavior>
     <MinimumGameVersion_Behavior>UpdateFull</MinimumGameVersion_Behavior>
     <Dependencies_VersionBehavior>Ignore</Dependencies_VersionBehavior>

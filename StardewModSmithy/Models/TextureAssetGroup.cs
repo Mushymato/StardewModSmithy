@@ -80,6 +80,7 @@ public sealed partial record TextureAsset(IAssetName AssetName, string PathOnDis
 
 public sealed class TextureAssetGroup() : ILoadableAsset
 {
+    private const string FRONT = "front.json";
     private Dictionary<IAssetName, TextureAsset>? gatheredTextures = null;
     public Dictionary<IAssetName, TextureAsset> GatheredTextures => gatheredTextures ??= FormGatheredTextures();
 
@@ -101,6 +102,24 @@ public sealed class TextureAssetGroup() : ILoadableAsset
             IAssetName assetName = FormAssetName(file);
             newlyGathered[assetName] = new(assetName, relFile);
         }
+        if (
+            ModEntry.ReadJson<Dictionary<string, string>>(ModEntry.InputDirectoryPath, FRONT)
+            is Dictionary<string, string> fronts
+        )
+        {
+            foreach ((string baseName, string frontName) in fronts)
+            {
+                IAssetName baseAssetName = ModEntry.ParseAssetName(baseName);
+                IAssetName frontAssetName = ModEntry.ParseAssetName(frontName);
+                if (
+                    newlyGathered.TryGetValue(baseAssetName, out TextureAsset? baseAsset)
+                    && newlyGathered.TryGetValue(frontAssetName, out TextureAsset? frontAsset)
+                )
+                {
+                    baseAsset.Front = frontAsset;
+                }
+            }
+        }
         if (newlyGathered.Any())
         {
             newlyGathered.First().Value.IsSelected = true;
@@ -118,6 +137,7 @@ public sealed class TextureAssetGroup() : ILoadableAsset
         ref HashSet<IAssetName> requiredAssets
     )
     {
+        Dictionary<string, string> frontInfo = [];
         StringBuilder targetSB = new();
         foreach (IAssetName key in requiredAssets.Reverse())
         {
@@ -141,8 +161,10 @@ public sealed class TextureAssetGroup() : ILoadableAsset
                 targetSB.Append(',');
                 targetSB.Append(key.BaseName);
                 targetSB.Append("Front");
+                frontInfo[key.BaseName] = txAssetFront.AssetName.BaseName;
             }
         }
+        ModEntry.WriteJson(Path.Combine(ModEntry.InputDirectoryPath, FRONT), frontInfo);
         if (targetSB.Length > 1)
         {
             targetSB.Remove(0, 1);

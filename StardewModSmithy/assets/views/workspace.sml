@@ -230,7 +230,7 @@
                 keybind-list={<>QuickPatchReloadKey} />
           </form-row>
           <form-row title={#gui.label.quick-patch-reload-modid} tooltip={#gui.tooltip.quick-patch-reload-modid}>
-            <textinput layout="50% 64px" margin="-8,0" font="dialogue" placeholder={#gui.label.quick-patch-reload-modid} text={<>QuickPatchReloadModIds} />
+            <textinput layout="50% 64px" margin="-8,0" font="small" placeholder={#gui.label.quick-patch-reload-modid} text={<>QuickPatchReloadModIds} />
           </form-row>
         </lane>
       </scrollable>
