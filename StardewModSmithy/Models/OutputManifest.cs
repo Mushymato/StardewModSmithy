@@ -6,7 +6,6 @@ namespace StardewModSmithy.Models;
 public sealed record SmithyInfo()
 {
     public List<string> Generated { get; set; } = [];
-    public List<string> I18N { get; set; } = [];
     public List<string> Custom { get; set; } = [];
     public string Exported => string.Concat(ModEntry.ModCreditString, DateTime.Now.ToString());
 };
@@ -16,7 +15,6 @@ public sealed class OutputManifest()
     internal string PackFor { get; set; } = Utils.DEFAULT_STR;
     internal string OutputFolder => Path.Combine(ModEntry.OutputDirectoryPath, Sanitize.Path(UniqueID));
     internal string TranslationFolder => Path.Combine(OutputFolder, Utils.TL_DIR);
-    internal HashSet<string> OptionalDependencies = [];
     internal string NexusID { get; set; } = string.Empty;
 
     public string Author { get; set; } = "";
@@ -25,19 +23,7 @@ public sealed class OutputManifest()
     public string UniqueID { get; set; } = string.Empty;
     public string Description { get; set; } = "New mod made with StardewModSmithy";
     public object ContentPackFor => new { UniqueID = PackFor };
-    public List<object>? Dependencies
-    {
-        get
-        {
-            List<object>? deps = null;
-            if (OptionalDependencies.Any())
-            {
-                deps ??= [];
-                deps.AddRange(OptionalDependencies.Select(dep => new { UniqueID = dep, IsRequired = false }));
-            }
-            return deps;
-        }
-    }
+    public List<object>? Dependencies { get; set; } = null;
     public List<string>? UpdateKeys
     {
         get

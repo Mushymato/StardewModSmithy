@@ -115,7 +115,6 @@ public sealed class OutputPackContentPatcher : IOutputPack
         Directory.CreateDirectory(assetsDir);
 
         List<IMockPatch> changes = [];
-        List<string> translationFiles = [];
         // translations
         if (Translations != null)
         {
@@ -174,10 +173,6 @@ public sealed class OutputPackContentPatcher : IOutputPack
         List<string> includeList = [];
         foreach (IMockPatch mockPatch in changes)
         {
-            if ((mockPatch.When?.TryGetValue("HasMod", out object? maybeModId) ?? false) && maybeModId is string modId)
-            {
-                Manifest.OptionalDependencies.Add(modId);
-            }
             if (mockPatch is MockInclude inc)
             {
                 includeList.Add(inc.FromFile);
@@ -185,7 +180,6 @@ public sealed class OutputPackContentPatcher : IOutputPack
         }
         Manifest.StardewModSmithyInfo.Generated = [Utils.MANIFEST_FILE, Utils.CONTENT_JSON, .. includeList];
         Manifest.StardewModSmithyInfo.Custom = [];
-        Manifest.StardewModSmithyInfo.I18N = translationFiles;
         string customDir = Path.Combine(targetPath, Utils.CUSTOM_DIR);
         if (Directory.Exists(customDir))
         {
