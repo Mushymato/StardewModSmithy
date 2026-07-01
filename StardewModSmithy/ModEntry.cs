@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewModSmithy.GUI;
+using StardewModSmithy.Integration;
 using StardewModSmithy.Models;
 using StardewModSmithy.Wheels;
 using StardewValley;
@@ -173,6 +174,19 @@ public sealed class ModEntry : Mod
         {
             e.LoadFromModFile<Texture2D>($"assets/icon/{Config.IconStyle}/hover.png", AssetLoadPriority.Low);
         }
+        //
+        if (e.NameWithoutLocale.IsEquivalentTo("aedenthorn.LauncherDrawer/dict"))
+        {
+            e.Edit(data =>
+            {
+                data.AsDictionary<string, Dictionary<string, object>>().Data[ModId] = new()
+                {
+                    ["Name"] = "Smithy",
+                    ["Description"] = "StardewModSmithy",
+                    ["Action"] = new Action(EditorMenuManager.ShowWorkspace),
+                };
+            });
+        }
     }
 
     private void OnRenderedActiveMenu(object? sender, RenderedActiveMenuEventArgs e)
@@ -261,6 +275,18 @@ public sealed class ModEntry : Mod
             IsContentPatcherLoaded = true;
         }
         AddToRawCommandQueue = Make_AddToRawCommandQueue();
+        // iconic framework
+        if (Helper.ModRegistry.GetApi<IIconicFrameworkApi>("furyx639.ToolbarIcons") is IIconicFrameworkApi ifApi)
+        {
+            ifApi.AddToolbarIcon(
+                ModId,
+                IconBaseTexture,
+                null,
+                () => ModManifest.Name,
+                null,
+                EditorMenuManager.ShowWorkspace
+            );
+        }
     }
 
     private static void ExecuteCommand(string command)
