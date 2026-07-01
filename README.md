@@ -47,5 +47,6 @@ Hopefully this list expands as development continues.
 
 ## Credits
 
-- The title screen button is drawn by [catissocute](https://www.nexusmods.com/profile/catissocute?gameId=1303)
-
+- The title screen buttons are drawn by:
+    - [catissocute](https://www.nexusmods.com/profile/catissocute?gameId=1303)
+    - [ENDYLAU](https://www.nexusmods.com/profile/EndyLau/mods?gameId=1303)
