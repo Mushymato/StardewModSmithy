@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - New pelican by ENDYLAU
 - Iconic Framework support
 - Launcher Drawer support
+- Updated ru.json
 
 ### Fixed
 - Issue where front texture info is lost
