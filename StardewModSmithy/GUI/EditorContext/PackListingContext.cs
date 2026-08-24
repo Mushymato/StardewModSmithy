@@ -94,6 +94,8 @@ public record PackDisplayEntry(IOutputPack Pack) : INotifyPropertyChanged
 
     public void ShowEdit_Furniture()
     {
+        if (!CanShowEdit_Furniture)
+            return;
         IsExpanded = false;
         if (Pack is OutputPackContentPatcher outputPackContentPatcher && outputPackContentPatcher.TxAssetGroup != null)
         {
@@ -117,6 +119,8 @@ public record PackDisplayEntry(IOutputPack Pack) : INotifyPropertyChanged
 
     public void ShowEdit_WallFloor()
     {
+        if (!CanShowEdit_WallFloor)
+            return;
         IsExpanded = false;
         if (Pack is OutputPackContentPatcher outputPackContentPatcher && outputPackContentPatcher.TxAssetGroup != null)
         {
