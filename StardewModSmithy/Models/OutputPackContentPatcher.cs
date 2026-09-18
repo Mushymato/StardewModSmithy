@@ -192,7 +192,8 @@ public sealed class OutputPackContentPatcher : IOutputPack
                 customIncludes.Add(Path.Combine(Utils.CUSTOM_DIR, fileName));
                 Manifest.StardewModSmithyInfo.Custom.Add(fileName);
             }
-            changes.Add(new MockInclude(string.Join(',', customIncludes)));
+            if (customIncludes.Count > 0)
+                changes.Add(new MockInclude(string.Join(',', customIncludes)));
         }
         else
         {
